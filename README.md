@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img width="672" alt="image" src="https://user-images.githubusercontent.com/17646399/217417255-f1bcf8fd-fa4e-4818-8380-044515d4843f.png">
+    <img width="672" alt="image" src="">
 </h1>
 
 <div align="center">
@@ -14,7 +14,6 @@
 
 <br />
 
-NotReal is a React Native and Expo application and an incomplete clone of [BeReal](https://bere.al) made as a demo originally designed for teaching the mobile development learnathon track at [Blueprint 2023](https://blueprint.hackmit.org).
 
 ## Overview
 

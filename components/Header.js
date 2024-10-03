@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar'
 
 import CameraPlusIcon from "../assets/icons/camera-plus.svg";
-import Avatar from "../components/Avatar";
+import Avatar from "./Avatar";
 
 import { useNavigation } from '@react-navigation/native';
 import { useProfile } from '../contexts/profile';
@@ -29,7 +29,7 @@ export default function Header({ partial = false, darkMode = false }) {
         </TouchableOpacity>
         }
         <Text style={[styles.title, { color: darkMode ? "#fff" : "#000" }]}>
-          NotReal
+          JoynMe
         </Text>
         {!partial && <TouchableOpacity>
           <Avatar onPress={() => navigation.push('Initial')} name={handle.substring(1)} />

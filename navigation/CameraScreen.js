@@ -1,151 +1,197 @@
-import { StyleSheet, View, useWindowDimensions, TouchableOpacity, Image } from 'react-native'
-import { Camera, CameraType } from 'expo-camera';
-import { useState, useEffect, useRef } from 'react';
-import { usePosts } from '../contexts/posts'
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, View, useWindowDimensions, TouchableOpacity, Image, Text, Button } from 'react-native';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { usePosts } from '../contexts/posts';
 import { useProfile } from '../contexts/profile';
 import { useNavigation } from '@react-navigation/native';
 
-import Send from '../assets/icons/send.svg'
-import Rotate from '../assets/icons/rotate.svg'
+import Send from '../assets/icons/send.svg';
+import Rotate from '../assets/icons/rotate.svg';
 
 export default function CameraScreen() {
-  const [status, requestPermission] = Camera.useCameraPermissions();
-  const [type, setType] = useState(CameraType.back);
-  const [pictures, setPictures] = useState({ [CameraType.front]: null, [CameraType.back]: null })
-  const cameraRef = useRef();
+  const [status, requestPermission] = useCameraPermissions();
+  const [facing, setFacing] = useState('back'); // Removed <CameraType>
+  const [pictures, setPictures] = useState({
+    front: null,
+    back: null,
+  });
+  const cameraRef = useRef(null); // Adjusted for JavaScript
   const { width } = useWindowDimensions();
   const { posts, setPosts } = usePosts();
   const height = Math.round((width * 16) / 9);
-  const otherPicture = pictures[otherSide()]
   const navigation = useNavigation();
-  const profile = useProfile()
+  const profile = useProfile();
   const [cameraReady, setCameraReady] = useState(false);
 
-  useEffect(() => { requestPermission() }, []);
+  useEffect(() => {
+    (async () => {
+      if (!status) {
+        await requestPermission();
+      }
+    })();
+  }, [status, requestPermission]);
 
-  if (!status || !status.granted) {
-    return <View />;
+  if (!status) {
+    // Permissions are still loading
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={{ color: '#fff' }}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!status.granted) {
+    // Permissions not granted
+    return (
+      <View style={styles.permissionContainer}>
+        <Text style={styles.permissionText}>We need your permission to access the camera</Text>
+        <Button onPress={requestPermission} title="Grant Permission" />
+      </View>
+    );
   }
 
   function otherSide() {
-    if (type == CameraType.back) {
-      return CameraType.front
-    }
-
-    return CameraType.back
+    return facing === 'back' ? 'front' : 'back';
   }
 
   function swapCamera() {
-    setType(otherSide())
+    setFacing(otherSide());
   }
 
   function submitPicture() {
-    const post = {
-      "id": posts.length,
-      "user": {
-        "handle": profile.handle,
-        "profile": profile.profile
-      },
-      "likes": 0,
-      "dislikes": 0,
-      "location": {
-        "city": profile.location.city,
-        "state": profile.location.state
-      },
-      "image": {
-        "front": pictures[CameraType.front].uri,
-        "back": pictures[CameraType.back].uri
-      }
-    }
+    if (pictures.front && pictures.back) {
+      const post = {
+        id: posts.length,
+        user: {
+          handle: profile.handle,
+          profile: profile.profile,
+        },
+        likes: 0,
+        dislikes: 0,
+        location: {
+          city: profile.location.city,
+          state: profile.location.state,
+        },
+        image: {
+          front: pictures.front.uri,
+          back: pictures.back.uri,
+        },
+      };
 
-    setPosts([post, ...posts])
-    navigation.navigate('Main')
+      setPosts([post, ...posts]);
+      navigation.navigate('Main');
+    }
   }
 
   function hasBothPictures() {
-    return pictures[CameraType.front] !== null && pictures[CameraType.back] !== null
+    return pictures.front !== null && pictures.back !== null;
   }
 
   async function takePicture() {
-    const picture = await cameraRef.current.takePictureAsync()
-    await cameraRef.current.resumePreview()
-    setCameraReady(false)
-
-    setPictures({ ...pictures, [type]: picture })
-    swapCamera()
+    if (cameraRef.current && cameraReady) {
+      try {
+        const picture = await cameraRef.current.takePictureAsync();
+        setPictures(prev => ({ ...prev, [facing]: picture }));
+        swapCamera();
+      } catch (error) {
+        console.error('Error taking picture:', error);
+      }
+    }
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.cameraContainer}>
-        <Camera
+        <CameraView
           onCameraReady={() => setCameraReady(true)}
           ref={cameraRef}
           ratio="16:9"
-          style={{ width: "100%", height }}
-          type={type}
+          style={{ width: '100%', height }}
+          facing={facing}
+          flash="off" // You can make this dynamic if needed
         >
-          {otherPicture !== null && (
+          {pictures[otherSide()] && (
             <Image
-              source={{ uri: otherPicture.uri }}
-              style={[styles.image, { width: 0.36 * width, height: 0.36 * height }]}
+              source={{ uri: pictures[otherSide()]?.uri }}
+              style={[styles.imagePreview, { width: 0.36 * width, height: 0.36 * height }]}
             />
           )}
-        </Camera>
+        </CameraView>
       </View>
       <View style={styles.toolsContainer}>
-        <TouchableOpacity onPress={swapCamera} style={[styles.secondary, { marginRight: 20 }]}>
+        <TouchableOpacity onPress={swapCamera} style={[styles.secondaryButton, { marginRight: 20 }]}>
           <Rotate color="white" width={35} height={35} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={takePicture} style={styles.take} />
+        <TouchableOpacity onPress={takePicture} style={styles.captureButton} />
         <TouchableOpacity
           disabled={!hasBothPictures()}
           onPress={submitPicture}
-          style={[styles.secondary, {
-            marginLeft: 20,
-          }]}>
-          <Send color={hasBothPictures() ? "white" : "#868e96"} width={35} height={35} />
+          style={[
+            styles.secondaryButton,
+            { marginLeft: 20, opacity: hasBothPictures() ? 1 : 0.5 },
+          ]}
+        >
+          <Send color={hasBothPictures() ? 'white' : '#868e96'} width={35} height={35} />
         </TouchableOpacity>
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000"
-    // alignItems: "center"
+    backgroundColor: '#000',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  permissionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  permissionText: {
+    textAlign: 'center',
+    marginBottom: 10,
+    color: '#fff',
+    fontSize: 16,
   },
   cameraContainer: {
+    flex: 4,
     borderRadius: 34,
-    overflow: 'hidden'
+    overflow: 'hidden',
   },
-  image: {
+  imagePreview: {
     position: 'absolute',
     left: 20,
     top: 40,
     backgroundColor: 'transparent',
     borderRadius: 16,
     borderWidth: 3,
-    borderColor: "black"
+    borderColor: 'black',
   },
   toolsContainer: {
-    marginTop: 20,
     flex: 1,
+    marginTop: 20,
     flexDirection: 'row',
-    justifyContent: "center",
-    alignItems: "center"
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  take: {
+  captureButton: {
     backgroundColor: '#FA5252',
-    borderRadius: 99,
+    borderRadius: 35,
     width: 70,
-    height: 70
+    height: 70,
+    borderWidth: 5,
+    borderColor: '#fff',
   },
-  secondary: {
+  secondaryButton: {
     backgroundColor: '#343a40',
     borderRadius: 16,
     padding: 8,
-  }
+  },
 });

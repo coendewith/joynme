@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, Image, useWindowDimensions } from 'react-native';
 import { useState, useMemo } from 'react'
 
-import LikeButton from '../components/LikeButton';
-import Avatar from '../components/Avatar';
+import LikeButton from './LikeButton';
+import Avatar from './Avatar';
 
 export default function Post({ id, user, likes, location, image }) {
   const { handle, profile } = user;

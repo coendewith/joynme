@@ -16,7 +16,7 @@ export default function InitialScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.inner}>
-        <Text style={styles.text}>What is your preferred handle?</Text>
+        <Text style={styles.text}>What is your name?</Text>
         <View style={styles.inputWrapper}>
           <TextInput value={value} onChangeText={(text) => setValue(text)} autoFocus style={styles.input} />
         </View>

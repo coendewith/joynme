@@ -27,7 +27,7 @@ export default function ConnectFriend() {
 
   // Replace with your backend's base URL
   // Ensure this URL is the current ngrok URL
-  const BACKEND_URL = 'https://3868-82-168-232-93.ngrok-free.app'; // Update as needed
+  const BACKEND_URL = 'https://3542-2a02-a210-20c3-5280-b5f6-d7b4-d60f-6b17.ngrok-free.app'; // Update as needed
 
   // Access posts and setPosts from context or props
   const { posts, setPosts } = usePosts(); // Example context hook

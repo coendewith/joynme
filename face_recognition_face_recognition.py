@@ -1,5 +1,3 @@
-# face_recognition_face_recognition.py
-
 import face_recognition
 import numpy as np
 from typing import List, Tuple
@@ -22,7 +20,7 @@ class FaceRecognitionFaceRecognition(FaceRecognitionInterface):
         :param known_faces: List of tuples containing (user_id, image_path)
         """
         for user_id, image_path in known_faces:
-            image = face_recognition.load_image_file(image_path)
+            image = self.load_image_file(image_path)
             encodings = face_recognition.face_encodings(image)
             if encodings:
                 self.known_face_encodings.append(encodings[0])
@@ -38,8 +36,8 @@ class FaceRecognitionFaceRecognition(FaceRecognitionInterface):
         :param image_path: Path to the image file.
         :return: List of recognized user IDs.
         """
-        image = face_recognition.load_image_file(image_path)
-        face_locations = face_recognition.face_locations(image)
+        image = self.load_image_file(image_path)
+        face_locations = self.get_face_locations(image)
         face_encodings = face_recognition.face_encodings(image, face_locations)
 
         recognized_ids = []
@@ -53,3 +51,21 @@ class FaceRecognitionFaceRecognition(FaceRecognitionInterface):
             else:
                 recognized_ids.append("Unknown")
         return recognized_ids
+
+    def load_image_file(self, file_path: str):
+        """
+        Load an image file into a numpy array.
+        
+        :param file_path: Path to the image file.
+        :return: Numpy array representation of the image.
+        """
+        return face_recognition.load_image_file(file_path)
+
+    def get_face_locations(self, image):
+        """
+        Detect face locations in an image.
+        
+        :param image: Numpy array representation of the image.
+        :return: List of face locations.
+        """
+        return face_recognition.face_locations(image)

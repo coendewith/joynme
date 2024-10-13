@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+face_verification_env/
+*.env
+env/
+
+# Node
+node_modules/
+yarn.lock
+package-lock.json
+
+# macOS
+.DS_Store
+
+# Images to ignore
+known_faces/
+
+# Other
+*.log
